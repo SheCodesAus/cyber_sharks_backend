@@ -56,7 +56,7 @@
 
 ## Mission Statement
 
-Empowering growth by connecting role models and opportunities in tech through a platform for collaboration and inclusivity.
+Empowering growth by connecting role models and opportunities in tech through a platform for collaboration and inclusiveness.
 
 ## Features
 
