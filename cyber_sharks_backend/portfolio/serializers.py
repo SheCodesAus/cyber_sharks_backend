@@ -25,7 +25,7 @@ class PortfolioSerializer(serializers.ModelSerializer):
     photo = serializers.URLField(required=False, allow_blank=True, allow_null=True)
     user = CustomUserSerializer(read_only=True)
 
-    # Use SlugRelatedField to represent specialisations by their 'name'
+    # Use SlugRelatedField to represent specialisations by their 'name' - because you can sleect many specialisations
     specialisations = serializers.SlugRelatedField(
         many=True, slug_field="name", queryset=Specialisation.objects.all()
     )
@@ -53,6 +53,17 @@ class PortfolioSerializer(serializers.ModelSerializer):
             "user",
         ]
         read_only_fields = ["id", "created_date", "user"]
+
+    def validate(self, attrs):
+        request = self.context.get("request")
+        user = request.user
+
+        if Portfolio.objects.filter(user=user).exists():
+            raise serializers.ValidationError(
+                "Sorry, you can only create one portfolio."
+            )
+
+        return attrs
 
     def create(self, validated_data):
         location_name = validated_data.pop("location")
