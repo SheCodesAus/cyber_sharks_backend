@@ -20,8 +20,13 @@ from users.views import CustomAuthToken
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('projects.urls')),
-    path('', include('users.urls')),
-    # path('api-auth/', include('rest_framework.urls')),
+    
+    # Users App URLs
+    path('', include('users.urls')),  # Existing users URLs at root
+    
+    # Portfolio App URLs
+    path('portfolios/', include('portfolio.urls')),  # New portfolio URLs
+    
+    # Authentication
     path('api-token-auth/', CustomAuthToken.as_view(), name='api_token_auth'),
 ]

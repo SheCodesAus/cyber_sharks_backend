@@ -39,9 +39,9 @@ CORS_ORIGIN_ALLOW_ALL = True
 # Application definition
 
 INSTALLED_APPS = [
-    "projects.apps.ProjectsConfig",
     "users.apps.UsersConfig",
     "locations.apps.LocationsConfig",
+    "portfolio.apps.PortfolioConfig",
     "rest_framework",
     "rest_framework.authtoken",
     "corsheaders",
