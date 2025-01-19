@@ -44,7 +44,9 @@ class Portfolio(models.Model):
         max_length=255
     )  # Renamed from 'biography' to 'profile_name' to match API
     biography = models.TextField()
-    photo = models.FileField(upload_to="portfolio_photos/")
+    photo = models.URLField(
+        max_length=500, blank=True, null=True
+    )  # Changed to URLField
     linkedin_url = models.URLField(max_length=200, blank=True, null=True)
     email = models.EmailField(unique=True)
     created_date = models.DateTimeField(auto_now_add=True)

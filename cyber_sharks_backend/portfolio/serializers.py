@@ -1,6 +1,8 @@
 # portfolio/serializers.py
 
 from rest_framework import serializers
+
+from locations.models import CityChoice
 from .models import Portfolio, Specialisation, ContactPreferences, Location
 from locations.serializers import LocationSerializer
 from users.serializers import CustomUserSerializer
@@ -19,10 +21,17 @@ class ContactPreferencesSerializer(serializers.ModelSerializer):
 
 
 class PortfolioSerializer(serializers.ModelSerializer):
+    location = serializers.ChoiceField(choices=CityChoice.choices)
+    photo = serializers.URLField(required=False, allow_blank=True, allow_null=True)
     user = CustomUserSerializer(read_only=True)
-    location = LocationSerializer()
-    specialisations = SpecialisationSerializer(many=True)
-    contact_preferences = ContactPreferencesSerializer(required=False)
+    specialisations = serializers.PrimaryKeyRelatedField(
+        queryset=Specialisation.objects.all(), many=True
+    )
+    contact_preferences = ContactPreferencesSerializer(required=False, allow_null=True)
+    email = serializers.EmailField()
+    linkedin_url = serializers.URLField(
+        required=False, allow_blank=True, allow_null=True
+    )
 
     class Meta:
         model = Portfolio
@@ -43,24 +52,16 @@ class PortfolioSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_date", "user"]
 
     def create(self, validated_data):
-        location_data = validated_data.pop("location")
+        location_name = validated_data.pop("location")
         specialisations_data = validated_data.pop("specialisations", [])
         contact_preferences_data = validated_data.pop("contact_preferences", None)
 
-        # Get or create location
-        location, created = Location.objects.get_or_create(**location_data)
-
-        # Create portfolio
+        location, created = Location.objects.get_or_create(city_name=location_name)
         portfolio = Portfolio.objects.create(
             location=location, user=self.context["request"].user, **validated_data
         )
+        portfolio.specialisations.set(specialisations_data)
 
-        # Add specialisations
-        for spec_data in specialisations_data:
-            spec, created = Specialisation.objects.get_or_create(**spec_data)
-            portfolio.specialisations.add(spec)
-
-        # Create contact preferences if provided
         if contact_preferences_data:
             ContactPreferences.objects.create(
                 portfolio=portfolio, **contact_preferences_data
@@ -69,19 +70,16 @@ class PortfolioSerializer(serializers.ModelSerializer):
         return portfolio
 
     def update(self, instance, validated_data):
-        location_data = validated_data.pop("location", None)
+        location_name = validated_data.pop("location", None)
         specialisations_data = validated_data.pop("specialisations", None)
         contact_preferences_data = validated_data.pop("contact_preferences", None)
 
-        if location_data:
-            location, created = Location.objects.get_or_create(**location_data)
+        if location_name:
+            location, created = Location.objects.get_or_create(city_name=location_name)
             instance.location = location
 
         if specialisations_data is not None:
-            instance.specialisations.clear()
-            for spec_data in specialisations_data:
-                spec, created = Specialisation.objects.get_or_create(**spec_data)
-                instance.specialisations.add(spec)
+            instance.specialisations.set(specialisations_data)
 
         if contact_preferences_data:
             contact_pref, created = ContactPreferences.objects.get_or_create(
