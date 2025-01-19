@@ -13,7 +13,7 @@ from .permissions import IsOwnerOrReadOnly
 # portfolio/views.py
 
 
-class Portfolio(APIView):
+class PortfolioListCreate(APIView):
     """
     List all portfolios or create a new portfolio.
     """
@@ -38,9 +38,6 @@ class Portfolio(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# portfolio/views.py
-
-
 class PortfolioDetail(APIView):
     """
     Retrieve, update, or delete a portfolio instance.
@@ -61,12 +58,19 @@ class PortfolioDetail(APIView):
 
     def get(self, request, pk, format=None):
         portfolio = self.get_object(pk)
-        serializer = PortfolioSerializer(portfolio)
+        serializer = PortfolioSerializer(
+            portfolio, context={"request": request}
+        )  # Pass context here
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, pk, format=None):
         portfolio = self.get_object(pk)
-        serializer = PortfolioSerializer(portfolio, data=request.data, partial=True)
+        serializer = PortfolioSerializer(
+            portfolio,
+            data=request.data,
+            partial=True,
+            context={"request": request},  # Pass context here
+        )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)

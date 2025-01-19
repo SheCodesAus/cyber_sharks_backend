@@ -58,7 +58,10 @@ class PortfolioSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         user = request.user
 
-        if Portfolio.objects.filter(user=user).exists():
+        # When updating, exclude the current portfolio from the check
+        portfolio_id = self.instance.id if self.instance else None
+
+        if Portfolio.objects.filter(user=user).exclude(id=portfolio_id).exists():
             raise serializers.ValidationError(
                 "Sorry, you can only create one portfolio."
             )
