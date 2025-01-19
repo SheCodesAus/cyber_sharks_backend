@@ -50,7 +50,6 @@ class ContactPreferences(models.Model):
 
 
 class Portfolio(models.Model):
-    id = models.AutoField(primary_key=True)
     profile_name = models.CharField(
         max_length=255
     )  # Renamed from 'biography' to 'profile_name' to match API

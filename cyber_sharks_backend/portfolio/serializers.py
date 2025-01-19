@@ -24,9 +24,12 @@ class PortfolioSerializer(serializers.ModelSerializer):
     location = serializers.ChoiceField(choices=CityChoice.choices)
     photo = serializers.URLField(required=False, allow_blank=True, allow_null=True)
     user = CustomUserSerializer(read_only=True)
-    specialisations = serializers.PrimaryKeyRelatedField(
-        queryset=Specialisation.objects.all(), many=True
+
+    # Use SlugRelatedField to represent specialisations by their 'name'
+    specialisations = serializers.SlugRelatedField(
+        many=True, slug_field="name", queryset=Specialisation.objects.all()
     )
+
     contact_preferences = ContactPreferencesSerializer(required=False, allow_null=True)
     email = serializers.EmailField()
     linkedin_url = serializers.URLField(
@@ -55,13 +58,9 @@ class PortfolioSerializer(serializers.ModelSerializer):
         location_name = validated_data.pop("location")
         specialisations_data = validated_data.pop("specialisations", [])
         contact_preferences_data = validated_data.pop("contact_preferences", None)
-
         location, created = Location.objects.get_or_create(city_name=location_name)
-        portfolio = Portfolio.objects.create(
-            location=location, user=self.context["request"].user, **validated_data
-        )
+        portfolio = Portfolio.objects.create(location=location, **validated_data)
         portfolio.specialisations.set(specialisations_data)
-
         if contact_preferences_data:
             ContactPreferences.objects.create(
                 portfolio=portfolio, **contact_preferences_data
@@ -73,7 +72,6 @@ class PortfolioSerializer(serializers.ModelSerializer):
         location_name = validated_data.pop("location", None)
         specialisations_data = validated_data.pop("specialisations", None)
         contact_preferences_data = validated_data.pop("contact_preferences", None)
-
         if location_name:
             location, created = Location.objects.get_or_create(city_name=location_name)
             instance.location = location

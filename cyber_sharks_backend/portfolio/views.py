@@ -26,7 +26,9 @@ class Portfolio(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, format=None):
-        serializer = PortfolioSerializer(data=request.data)
+        serializer = PortfolioSerializer(
+            data=request.data, context={"request": request}
+        )
         if serializer.is_valid():
             # Automatically associate the portfolio with the authenticated user
             serializer.save(
