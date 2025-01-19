@@ -18,8 +18,19 @@ CONTACT_METHOD_CHOICES = [
 ]
 
 
+class SpecialisationChoices(models.TextChoices):
+    PYTHON = "Python", "Python"
+    DJANGO = "Django", "Django"
+    REACTJS = "ReactJs", "ReactJs"
+
+
 class Specialisation(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(
+        max_length=50,
+        choices=SpecialisationChoices.choices,
+        default=SpecialisationChoices.PYTHON,
+        unique=True,
+    )
 
     def __str__(self):
         return self.name
