@@ -22,6 +22,10 @@ class SpecialisationChoices(models.TextChoices):
     PYTHON = "Python", "Python"
     DJANGO = "Django", "Django"
     REACTJS = "ReactJs", "ReactJs"
+    HTMLCSS = "Html/css", "Html/css"
+    JAVA = "Java", "Java"
+    CSHARP = "Csharp", "Csharp"
+    JAVASCRIPT = "Javascript", "Javascript"
 
 
 class Specialisation(models.Model):
