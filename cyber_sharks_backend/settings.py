@@ -27,7 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY",
-    "django-insecure-b#x0!6ow(!vgfupr&q@^7a)e6u6%+wo-3hz&y%^en#mv-+6yru",  # is a signature to prevent bad people to get in your website
+    "lr_js@m*jugt(77-o+31kjz6kd9w3(b1zpf=4x(^x26=^czg**",  # is a signature to prevent bad people to get in your website
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -99,11 +99,13 @@ WSGI_APPLICATION = "cyber_sharks_backend.wsgi.application"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=500,
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
+db_from_env = dj_database_url.config(conn_max_age=500)
+DATABASES['default'].update(db_from_env)
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
