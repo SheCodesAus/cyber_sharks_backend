@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from rest_framework import generics, filters
+from rest_framework import generics, filters, serializers
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
 from users.models import CustomUser
@@ -10,6 +10,12 @@ from portfolio.serializers import PortfolioSerializer, SpecialisationSerializer
 from locations.serializers import LocationSerializer
 from rest_framework.pagination import PageNumberPagination
 
+VALID_SEARCH = [
+    "user", 
+    "portfolio", 
+    "location", 
+    "specialisation"
+    ]
 
 # This is to limit the ammount of data returned - will make load time better etc in case heaps returns
 class StandardResultsSetPagination(PageNumberPagination):
@@ -29,8 +35,9 @@ class SearchView(generics.ListAPIView):
 
     def get_queryset(self):
         query_type = self.request.query_params.get(
-            "type", "portfolio"
-        )  # deffault to Portfolio
+            "type", "portfolio")  # deffault to Portfolio
+        if query_type not in VALID_SEARCH:
+            raise serializers.ValidationError({"detail": f"Sorry, you can't search for, {query_type}"})
         search_query = self.request.query_params.get("search", "")
 
         if query_type == "user":
