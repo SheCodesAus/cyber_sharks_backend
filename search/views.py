@@ -10,12 +10,8 @@ from portfolio.serializers import PortfolioSerializer, SpecialisationSerializer
 from locations.serializers import LocationSerializer
 from rest_framework.pagination import PageNumberPagination
 
-VALID_SEARCH = [
-    "user", 
-    "portfolio", 
-    "location", 
-    "specialisation"
-    ]
+VALID_SEARCH = ["user", "portfolio", "location", "specialisation"]
+
 
 # This is to limit the ammount of data returned - will make load time better etc in case heaps returns
 class StandardResultsSetPagination(PageNumberPagination):
@@ -35,9 +31,12 @@ class SearchView(generics.ListAPIView):
 
     def get_queryset(self):
         query_type = self.request.query_params.get(
-            "type", "portfolio")  # deffault to Portfolio
+            "type", "portfolio"
+        )  # deffault to Portfolio
         if query_type not in VALID_SEARCH:
-            raise serializers.ValidationError({"detail": f"Sorry, you can't search for, {query_type}"})
+            raise serializers.ValidationError(
+                {"detail": f"Sorry, you can't search for, {query_type}"}
+            )
         search_query = self.request.query_params.get("search", "")
 
         if query_type == "user":
@@ -45,12 +44,11 @@ class SearchView(generics.ListAPIView):
         elif query_type == "location":
             return Location.objects.filter(name__icontains=search_query)
         elif query_type == "specialisation":
-            specialisations = search_query.split(
-                ","
-            )  # allows to search multiples eg python, django
+            specialisations = search_query.split(",")
             return Portfolio.objects.filter(
-                specialisations__name__icontains=search_query
-            ).distinct()  # distnct to avoid duplicate results if multiple matches
+                specialisations__name__in=specialisations
+            ).distinct()
+        # distnct to avoid duplicate results if multiple matches
         else:
             return Portfolio.objects.filter(profile_name__icontains=search_query)
 
@@ -61,6 +59,6 @@ class SearchView(generics.ListAPIView):
         elif query_type == "location":
             return LocationSerializer
         elif query_type == "specialisation":
-            return PortfolioSerializer
+            return SpecialisationSerializer
         else:
             return PortfolioSerializer
