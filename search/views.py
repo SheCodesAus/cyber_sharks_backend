@@ -2,36 +2,44 @@ from django.shortcuts import render
 from rest_framework import generics, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
-from users.models import CustomUser  # Replace with your actual user model
-from portfolio.models import Portfolio
+from users.models import CustomUser
+from portfolio.models import Portfolio, Specialisation
 from locations.models import Location
-from users.serializers import UserSerializer  # Replace with your actual user serializer
-from portfolio.serializers import PortfolioSerializer
+from users.serializers import CustomUserSerializer
+from portfolio.serializers import PortfolioSerializer, SpecialisationSerializer
 from locations.serializers import LocationSerializer
 
 class SearchView(generics.ListAPIView):
     """
-    A generic search view to filter data across Users, Portfolios, and Locations.
+    A search view to filter data across Users, Portfolios, Locations, and Specialisations.
     """
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
-    search_fields = ['name', 'description']  
+    search_fields = []  # fields are dynamically set in the view logic!!!
 
     def get_queryset(self):
-        query_type = self.request.query_params.get('type', 'portfolio')  
-        search_query = self.request.query_params.get('search', '')  
+        query_type = self.request.query_params.get("type", "portfolio")  # deffault to Portfolio
+        search_query = self.request.query_params.get("search", "")  
 
-        if query_type == 'user':  
+        if query_type == "user":
             return CustomUser.objects.filter(username__icontains=search_query)
-        elif query_type == 'location':  
+        elif query_type == "location":
             return Location.objects.filter(name__icontains=search_query)
+        elif query_type == "specialisation":
+            return Portfolio.objects.filter(
+                specialisations__name__icontains=search_query
+            ).distinct()  #distnct to avoid duplicate results if multiple matches
         else:  
-            return Portfolio.objects.filter(name__icontains=search_query)
+            return Portfolio.objects.filter(
+                profile_name__icontains=search_query
+            )
 
     def get_serializer_class(self):
-        query_type = self.request.query_params.get('type', 'portfolio')
-        if query_type == 'user':
-            return UserSerializer
-        elif query_type == 'location':
+        query_type = self.request.query_params.get("type", "portfolio")
+        if query_type == "user":
+            return CustomUserSerializer
+        elif query_type == "location":
             return LocationSerializer
+        elif query_type == "specialisation":
+            return PortfolioSerializer
         else:
             return PortfolioSerializer
