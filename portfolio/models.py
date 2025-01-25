@@ -4,28 +4,30 @@ from locations.models import Location
 
 # We will need to install Pillow if we want to upload actual photos - right now it is written for a file field
 
+# TODO: capitals for serach results
+
 EXPERIENCE_LEVEL_CHOICES = [
-    ("BEGINNER", "Beginner"),
-    ("JUNIOR", "Junior"),
-    ("MID", "Mid"),
-    ("SENIOR", "Senior"),
+    ("beginner", "Beginner"),
+    ("junior", "Junior"),
+    ("mid", "Mid"),
+    ("senior", "Senior"),
 ]
 
 CONTACT_METHOD_CHOICES = [
-    ("EMAIL", "Email"),
-    ("PHONE", "Phone"),
-    ("LINKEDIN", "LinkedIn"),
+    ("email", "Email"),
+    ("phone", "Phone"),
+    ("linkedin", "LinkedIn"),
 ]
 
 
 class SpecialisationChoices(models.TextChoices):
-    PYTHON = "Python", "Python"
-    DJANGO = "Django", "Django"
-    REACTJS = "ReactJs", "ReactJs"
-    HTMLCSS = "Html/css", "Html/css"
-    JAVA = "Java", "Java"
-    CSHARP = "Csharp", "Csharp"
-    JAVASCRIPT = "Javascript", "Javascript"
+    PYTHON = "python", "Python"
+    DJANGO = "django", "Django"
+    REACTJS = "reactjs", "ReactJs"
+    HTMLCSS = "html/css", "Html/Css"
+    JAVA = "java", "Java"
+    CSHARP = "csharp", "Csharp"
+    JAVASCRIPT = "javascript", "Javascript"
 
 
 class Specialisation(models.Model):

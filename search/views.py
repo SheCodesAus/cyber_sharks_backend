@@ -1,19 +1,12 @@
-from django.shortcuts import render
-from rest_framework import generics, filters, serializers
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.response import Response
-from users.models import CustomUser
 from portfolio.models import Portfolio, Specialisation
 from locations.models import Location
-from users.serializers import CustomUserSerializer
-from portfolio.serializers import PortfolioSerializer, SpecialisationSerializer
-from locations.serializers import LocationSerializer
+from portfolio.serializers import PortfolioSerializer
+from rest_framework.exceptions import ValidationError
+from rest_framework import generics
 from rest_framework.pagination import PageNumberPagination
+from locations.models import CityChoice  # Import your CityChoice enum
 
-VALID_SEARCH = ["user", "portfolio", "location", "specialisation"]
 
-
-# This is to limit the ammount of data returned - will make load time better etc in case heaps returns
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = "page_size"
@@ -21,44 +14,66 @@ class StandardResultsSetPagination(PageNumberPagination):
 
 
 class SearchView(generics.ListAPIView):
-    """
-    A search view to filter data across Users, Portfolios, Locations, and Specialisations.
-    """
-
-    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
-    search_fields = []  # fields are dynamically set in the view logic!!!
+    filter_backends = []
     pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
-        query_type = self.request.query_params.get(
-            "type", "portfolio"
-        )  # deffault to Portfolio
-        if query_type not in VALID_SEARCH:
-            raise serializers.ValidationError(
-                {"detail": f"Sorry, you can't search for, {query_type}"}
-            )
-        search_query = self.request.query_params.get("search", "")
+        """
+        Filter results based on selected dropdown values and validate each input.
+        """
+        # Extract query parameters
+        location = self.request.query_params.get("city_names", None)
+        specialisations = self.request.query_params.getlist("name", [])
 
-        if query_type == "user":
-            return CustomUser.objects.filter(username__icontains=search_query)
-        elif query_type == "location":
-            return Location.objects.filter(name__icontains=search_query)
-        elif query_type == "specialisation":
-            specialisations = search_query.split(",")
-            return Portfolio.objects.filter(
+        # Validate location against CityChoice
+        if location:
+            if location not in CityChoice.values:
+                raise ValidationError(
+                    {
+                        "location": f"Woah. Where is {location}? That's not on our system, are you sure it exists?"
+                    }
+                )
+
+        # Start with all Portfolios
+        queryset = Portfolio.objects.all()
+
+        # Filter by location
+        if location:
+            queryset = queryset.filter(location__city_name=location)
+            if not queryset.exists():
+                raise ValidationError(
+                    {
+                        "location": f"Oh no, Prism users haven't moved to {location} yet. Keep checking back!"
+                    }
+                )
+
+        # Validate specialisations
+        if specialisations:
+            valid_specialisations = Specialisation.objects.filter(
+                name__in=specialisations
+            ).values_list("name", flat=True)
+            invalid_specialisations = set(specialisations) - set(valid_specialisations)
+            if invalid_specialisations:
+                raise ValidationError(
+                    {
+                        "specialisations": f"Oops! This tech stack doesn't exist?: {', '.join(invalid_specialisations)}"
+                    }
+                )
+            queryset = queryset.filter(
                 specialisations__name__in=specialisations
             ).distinct()
-        # distnct to avoid duplicate results if multiple matches
-        else:
-            return Portfolio.objects.filter(profile_name__icontains=search_query)
+
+        if not queryset.exists():
+            raise ValidationError(
+                {
+                    "detail": f"Oops! We couldn't find any Prism users in {location} with the tech stack of {', '.join(specialisations)}."
+                }
+            )
+
+        return queryset
 
     def get_serializer_class(self):
-        query_type = self.request.query_params.get("type", "portfolio")
-        if query_type == "user":
-            return CustomUserSerializer
-        elif query_type == "location":
-            return LocationSerializer
-        elif query_type == "specialisation":
-            return SpecialisationSerializer
-        else:
-            return PortfolioSerializer
+        """
+        Use the PortfolioSerializer for all responses since the main data is about Portfolios.
+        """
+        return PortfolioSerializer
