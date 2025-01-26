@@ -1,11 +1,11 @@
+
 from portfolio.models import Portfolio, Specialisation
 from locations.models import Location
 from portfolio.serializers import PortfolioSerializer
 from rest_framework.exceptions import ValidationError
 from rest_framework import generics
 from rest_framework.pagination import PageNumberPagination
-from locations.models import CityChoice  # Import your CityChoice enum
-
+from locations.models import CityChoice 
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 10
@@ -22,8 +22,9 @@ class SearchView(generics.ListAPIView):
         Filter results based on selected dropdown values and validate each input.
         """
         # Extract query parameters
-        location = self.request.query_params.get("city_names", None)
-        specialisations = self.request.query_params.getlist("name", [])
+        location = self.request.query_params.get("location", None)
+        topics = self.request.query_params.getlist("topic", [])  # Multi-select for topics
+        specialisations = self.request.query_params.getlist("specialisation", [])  # Multi-select for specialisations
 
         # Validate location against CityChoice
         if location:
@@ -47,7 +48,17 @@ class SearchView(generics.ListAPIView):
                     }
                 )
 
-        # Validate specialisations
+        # Filter by topics (if implemented by someone else later)
+        if topics:
+            queryset = queryset.filter(topics__name__in=topics).distinct()
+            if not queryset.exists():
+                raise ValidationError(
+                    {
+                        "topics": f"Oops! We couldn't find any users specializing in the topics: {', '.join(topics)}."
+                    }
+                )
+
+        # Validate and filter by specialisations
         if specialisations:
             valid_specialisations = Specialisation.objects.filter(
                 name__in=specialisations
@@ -63,10 +74,18 @@ class SearchView(generics.ListAPIView):
                 specialisations__name__in=specialisations
             ).distinct()
 
+        # Final validation for empty results
         if not queryset.exists():
+            filters = []
+            if location:
+                filters.append(f"location '{location}'")
+            if topics:
+                filters.append(f"topics {', '.join(topics)}")
+            if specialisations:
+                filters.append(f"specialisations {', '.join(specialisations)}")
             raise ValidationError(
                 {
-                    "detail": f"Oops! We couldn't find any Prism users in {location} with the tech stack of {', '.join(specialisations)}."
+                    "detail": f"Oops! We couldn't find any Prism users matching: {', '.join(filters)}."
                 }
             )
 
