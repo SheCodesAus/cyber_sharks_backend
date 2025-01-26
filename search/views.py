@@ -23,7 +23,7 @@ class SearchView(generics.ListAPIView):
         """
         # Extract query parameters
         location = self.request.query_params.get("location", None)
-        topics = self.request.query_params.getlist("topic", [])  # Multi-select for topics
+        # topics = self.request.query_params.getlist("topic", [])  # Multi-select for topics
         specialisations = self.request.query_params.getlist("specialisation", [])  # Multi-select for specialisations
 
         # Validate location against CityChoice
@@ -48,15 +48,15 @@ class SearchView(generics.ListAPIView):
                     }
                 )
 
-        # Filter by topics (if implemented by someone else later)
-        if topics:
-            queryset = queryset.filter(topics__name__in=topics).distinct()
-            if not queryset.exists():
-                raise ValidationError(
-                    {
-                        "topics": f"Oops! We couldn't find any users specializing in the topics: {', '.join(topics)}."
-                    }
-                )
+        # # Filter by topics (if implemented by someone else later)
+        # if topics:
+        #     queryset = queryset.filter(topics__name__in=topics).distinct()
+        #     if not queryset.exists():
+        #         raise ValidationError(
+        #             {
+        #                 "topics": f"Oops! We couldn't find any users specializing in the topics: {', '.join(topics)}."
+        #             }
+        #         )
 
         # Validate and filter by specialisations
         if specialisations:
@@ -79,8 +79,8 @@ class SearchView(generics.ListAPIView):
             filters = []
             if location:
                 filters.append(f"location '{location}'")
-            if topics:
-                filters.append(f"topics {', '.join(topics)}")
+            # if topics:
+            #     filters.append(f"topics {', '.join(topics)}")
             if specialisations:
                 filters.append(f"specialisations {', '.join(specialisations)}")
             raise ValidationError(
