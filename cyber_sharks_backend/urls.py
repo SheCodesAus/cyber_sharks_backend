@@ -14,19 +14,19 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import path, include
 from users.views import CustomAuthToken
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    
+    path("admin/", admin.site.urls),
     # Users App URLs
-    path('', include('users.urls')),  # Existing users URLs at root
-    
+    path("", include("users.urls")),  # Existing users URLs at root
     # Portfolio App URLs
-    path('portfolios/', include('portfolio.urls')),  # New portfolio URLs
-    
+    path("portfolios/", include("portfolio.urls")),  # New portfolio URLs
     # Authentication
-    path('api-token-auth/', CustomAuthToken.as_view(), name='api_token_auth'),
+    path("api-token-auth/", CustomAuthToken.as_view(), name="api_token_auth"),
+    # Search App URLs
+    path("search/", include("search.urls")),
 ]
