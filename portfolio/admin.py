@@ -1,7 +1,7 @@
 # portfolio/admin.py
 
 from django.contrib import admin
-from .models import Portfolio, Specialisation, ContactPreferences
+from .models import Portfolio, Specialisation, Topic, ContactPreferences
 
 @admin.register(Portfolio)
 class PortfolioAdmin(admin.ModelAdmin):
@@ -12,6 +12,11 @@ class PortfolioAdmin(admin.ModelAdmin):
 
 @admin.register(Specialisation)
 class SpecialisationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
+    search_fields = ('name',)
+
+@admin.register(Topic)
+class TopicAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
     search_fields = ('name',)
 
