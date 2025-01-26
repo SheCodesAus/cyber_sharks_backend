@@ -40,7 +40,8 @@ class PortfolioSerializer(serializers.ModelSerializer):
         model = Portfolio
         fields = [
             "id",
-            "profile_name",
+            "first_name",
+            "last_name",
             "biography",
             "photo",
             "linkedin_url",
