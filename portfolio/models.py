@@ -2,30 +2,29 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from locations.models import Location
 
-# We will need to install Pillow if we want to upload actual photos - right now it is written for a file field
 
 EXPERIENCE_LEVEL_CHOICES = [
-    ("BEGINNER", "Beginner"),
-    ("JUNIOR", "Junior"),
-    ("MID", "Mid"),
-    ("SENIOR", "Senior"),
+    ("beginner", "Beginner"),
+    ("junior", "Junior"),
+    ("mid", "Mid"),
+    ("senior", "Senior"),
 ]
 
 CONTACT_METHOD_CHOICES = [
-    ("EMAIL", "Email"),
-    ("PHONE", "Phone"),
-    ("LINKEDIN", "LinkedIn"),
+    ("email", "Email"),
+    ("phone", "Phone"),
+    ("linkedin", "LinkedIn"),
 ]
 
 
 class SpecialisationChoices(models.TextChoices):
-    PYTHON = "Python", "Python"
-    DJANGO = "Django", "Django"
-    REACTJS = "ReactJs", "ReactJs"
-    HTMLCSS = "Html/css", "Html/css"
-    JAVA = "Java", "Java"
-    CSHARP = "Csharp", "Csharp"
-    JAVASCRIPT = "Javascript", "Javascript"
+    PYTHON = "python", "Python"
+    DJANGO = "django", "Django"
+    REACTJS = "reactjs", "ReactJs"
+    HTMLCSS = "html/css", "Html/Css"
+    JAVA = "java", "Java"
+    CSHARP = "csharp", "Csharp"
+    JAVASCRIPT = "javascript", "Javascript"
 
 
 class Specialisation(models.Model):
@@ -35,6 +34,21 @@ class Specialisation(models.Model):
         default=SpecialisationChoices.PYTHON,
         unique=True,
     )
+
+    def __str__(self):
+        return self.name
+
+
+class TopicChoices(models.TextChoices):
+    DEVOPS = "DevOps", "DevOps"
+    AI = "AI", "AI"
+    FRONTEND = "Frontend", "Frontend"
+    TAYLOR_SWIFT = "Taylor Swift", "Taylor Swift"
+    # ... etc.
+
+
+class Topic(models.Model):
+    name = models.CharField(max_length=50, choices=TopicChoices.choices, unique=True)
 
     def __str__(self):
         return self.name
@@ -54,9 +68,8 @@ class ContactPreferences(models.Model):
 
 
 class Portfolio(models.Model):
-    profile_name = models.CharField(
-        max_length=255
-    )  # Renamed from 'biography' to 'profile_name' to match API
+    first_name = models.CharField(max_length=255)
+    last_name = models.CharField(max_length=255)
     biography = models.TextField()
     photo = models.URLField(
         max_length=500, blank=True, null=True
@@ -76,6 +89,7 @@ class Portfolio(models.Model):
         get_user_model(), on_delete=models.CASCADE, related_name="portfolios"
     )
     specialisations = models.ManyToManyField(Specialisation, related_name="portfolios")
+    topics = models.ManyToManyField("Topic", related_name="portfolios", blank=True)
 
     def __str__(self):
-        return f"{self.user.username} - {self.profile_name}"
+        return f"{self.user.username} - {self.first_name} {self.last_name}"

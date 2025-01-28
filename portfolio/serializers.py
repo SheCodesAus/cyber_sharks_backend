@@ -3,7 +3,7 @@
 from rest_framework import serializers
 
 from locations.models import CityChoice
-from .models import Portfolio, Specialisation, ContactPreferences, Location
+from .models import Portfolio, Specialisation, ContactPreferences, Location, Topic
 from locations.serializers import LocationSerializer
 from users.serializers import CustomUserSerializer
 
@@ -13,6 +13,10 @@ class SpecialisationSerializer(serializers.ModelSerializer):
         model = Specialisation
         fields = ["id", "name"]
 
+class TopicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Topic
+        fields = ["id", "name"]
 
 class ContactPreferencesSerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,9 +29,16 @@ class PortfolioSerializer(serializers.ModelSerializer):
     photo = serializers.URLField(required=False, allow_blank=True, allow_null=True)
     user = CustomUserSerializer(read_only=True)
 
-    # Use SlugRelatedField to represent specialisations by their 'name' - because you can sleect many specialisations
+    # Use SlugRelatedField to represent specialisations by their 'name' - because you can select many specialisations
     specialisations = serializers.SlugRelatedField(
         many=True, slug_field="name", queryset=Specialisation.objects.all()
+    )
+
+    topics = serializers.SlugRelatedField(
+        many=True,
+        slug_field="name",
+        queryset=Topic.objects.all(),
+        required=False,
     )
 
     contact_preferences = ContactPreferencesSerializer(required=False, allow_null=True)
@@ -40,7 +51,8 @@ class PortfolioSerializer(serializers.ModelSerializer):
         model = Portfolio
         fields = [
             "id",
-            "profile_name",
+            "first_name",
+            "last_name",
             "biography",
             "photo",
             "linkedin_url",
@@ -49,6 +61,7 @@ class PortfolioSerializer(serializers.ModelSerializer):
             "experience_level",
             "location",
             "specialisations",
+            "topics",
             "contact_preferences",
             "user",
         ]
@@ -71,10 +84,15 @@ class PortfolioSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         location_name = validated_data.pop("location")
         specialisations_data = validated_data.pop("specialisations", [])
+        topics_data = validated_data.pop("topics", [])
         contact_preferences_data = validated_data.pop("contact_preferences", None)
         location, created = Location.objects.get_or_create(city_name=location_name)
         portfolio = Portfolio.objects.create(location=location, **validated_data)
+
         portfolio.specialisations.set(specialisations_data)
+        portfolio.topics.set(topics_data)
+
+        # Handle contact preferences
         if contact_preferences_data:
             ContactPreferences.objects.create(
                 portfolio=portfolio, **contact_preferences_data
@@ -85,6 +103,7 @@ class PortfolioSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         location_name = validated_data.pop("location", None)
         specialisations_data = validated_data.pop("specialisations", None)
+        topics_data = validated_data.pop("topics", None)
         contact_preferences_data = validated_data.pop("contact_preferences", None)
         if location_name:
             location, created = Location.objects.get_or_create(city_name=location_name)
@@ -92,6 +111,9 @@ class PortfolioSerializer(serializers.ModelSerializer):
 
         if specialisations_data is not None:
             instance.specialisations.set(specialisations_data)
+
+        if topics_data is not None:
+            instance.topics.set(topics_data)
 
         if contact_preferences_data:
             contact_pref, created = ContactPreferences.objects.get_or_create(
