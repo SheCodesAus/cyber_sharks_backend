@@ -2,9 +2,6 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from locations.models import Location
 
-# We will need to install Pillow if we want to upload actual photos - right now it is written for a file field
-
-# TODO: capitals for serach results
 
 EXPERIENCE_LEVEL_CHOICES = [
     ("beginner", "Beginner"),
@@ -40,7 +37,8 @@ class Specialisation(models.Model):
 
     def __str__(self):
         return self.name
-    
+
+
 class TopicChoices(models.TextChoices):
     DEVOPS = "DevOps", "DevOps"
     AI = "AI", "AI"
@@ -48,15 +46,13 @@ class TopicChoices(models.TextChoices):
     TAYLOR_SWIFT = "Taylor Swift", "Taylor Swift"
     # ... etc.
 
+
 class Topic(models.Model):
-    name = models.CharField(
-        max_length=50,
-        choices=TopicChoices.choices,
-        unique=True
-    )
+    name = models.CharField(max_length=50, choices=TopicChoices.choices, unique=True)
 
     def __str__(self):
         return self.name
+
 
 class ContactPreferences(models.Model):
     portfolio = models.OneToOneField(
