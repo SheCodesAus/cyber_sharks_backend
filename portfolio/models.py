@@ -40,7 +40,23 @@ class Specialisation(models.Model):
 
     def __str__(self):
         return self.name
+    
+class TopicChoices(models.TextChoices):
+    DEVOPS = "DevOps", "DevOps"
+    AI = "AI", "AI"
+    FRONTEND = "Frontend", "Frontend"
+    TAYLOR_SWIFT = "Taylor Swift", "Taylor Swift"
+    # ... etc.
 
+class Topic(models.Model):
+    name = models.CharField(
+        max_length=50,
+        choices=TopicChoices.choices,
+        unique=True
+    )
+
+    def __str__(self):
+        return self.name
 
 class ContactPreferences(models.Model):
     portfolio = models.OneToOneField(
@@ -78,6 +94,7 @@ class Portfolio(models.Model):
         get_user_model(), on_delete=models.CASCADE, related_name="portfolios"
     )
     specialisations = models.ManyToManyField(Specialisation, related_name="portfolios")
+    topics = models.ManyToManyField("Topic", related_name="portfolios", blank=True)
 
     def __str__(self):
         return f"{self.user.username} - {self.profile_name}"

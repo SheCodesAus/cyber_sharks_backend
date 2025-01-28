@@ -2,11 +2,11 @@ from django.http import Http404
 from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, generics
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from .models import CustomUser
-from .serializers import CustomUserSerializer
+from .serializers import CustomUserSerializer, UserRegistrationSerializer
 from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly,
     IsAuthenticated,
@@ -95,7 +95,6 @@ class CustomAuthToken(ObtainAuthToken):
             }
         )
 
-
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -104,3 +103,7 @@ class LogoutView(APIView):
         return Response(
             {"message": "Successfully logged out"}, status=status.HTTP_200_OK
         )
+
+class UserRegistrationView(generics.CreateAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = UserRegistrationSerializer
