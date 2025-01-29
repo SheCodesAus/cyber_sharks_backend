@@ -40,12 +40,15 @@ class Specialisation(models.Model):
 
 
 class TopicChoices(models.TextChoices):
-    DEVOPS = "DevOps", "DevOps"
+    DEVOPS = "devOps", "DevOps"
     AI = "AI", "AI"
-    FRONTEND = "Frontend", "Frontend"
-    TAYLOR_SWIFT = "Taylor Swift", "Taylor Swift"
-    # ... etc.
-
+    FRONTEND = "frontend", "Frontend"
+    APIDESIGN = "API Design", "API design"
+    TESTING = "testing", "Testing"
+    AGILEMETHODOLOGIES = "agile methodologies", "Agile methodologies"
+    DATAVISUALISATION = "data visualisation", "Data Visualisation"
+    RESONSIVEDESIGN = "responsive design", "Responsive Design"
+    PUBLICSPEAKING = "public speaking", "Public Speaking"
 
 class Topic(models.Model):
     name = models.CharField(max_length=50, choices=TopicChoices.choices, unique=True)
@@ -71,9 +74,7 @@ class Portfolio(models.Model):
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     biography = models.TextField()
-    photo = models.URLField(
-        max_length=500, blank=True, null=True
-    )  # Changed to URLField
+    photo = models.ImageField(upload_to='portfolio/', null=True)  # Will upload to 'products' folder in S3
     linkedin_url = models.URLField(max_length=200, blank=True, null=True)
     email = models.EmailField(unique=True)
     created_date = models.DateTimeField(auto_now_add=True)

@@ -8,6 +8,7 @@ from django.http import Http404
 from .models import Portfolio
 from .serializers import PortfolioSerializer
 from .permissions import IsOwnerOrReadOnly
+from django.core.files.storage import default_storage
 
 
 # portfolio/views.py
@@ -65,6 +66,11 @@ class PortfolioDetail(APIView):
 
     def put(self, request, pk, format=None):
         portfolio = self.get_object(pk)
+        file = request.FILES['file']
+        file_name = default_storage.save(file.name, file)
+        file_url = default_storage.url(file_name)
+        print(file_url, file_name)
+
         serializer = PortfolioSerializer(
             portfolio,
             data=request.data,
