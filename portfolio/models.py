@@ -4,27 +4,27 @@ from locations.models import Location
 
 
 EXPERIENCE_LEVEL_CHOICES = [
-    ("beginner", "Beginner"),
-    ("junior", "Junior"),
-    ("mid", "Mid"),
-    ("senior", "Senior"),
+    ("Beginner", "beginner"),
+    ("Junior", "junior"),
+    ("Mid", "mid"),
+    ("Senior", "senior"),
 ]
 
 CONTACT_METHOD_CHOICES = [
-    ("email", "Email"),
-    ("phone", "Phone"),
-    ("linkedin", "LinkedIn"),
+    ("Email", "email"),
+    ("Phone", "phone"),
+    ("LinkedIn", "linkedin"),
 ]
 
 
 class SpecialisationChoices(models.TextChoices):
-    PYTHON = "python", "Python"
-    DJANGO = "django", "Django"
-    REACTJS = "reactjs", "ReactJs"
-    HTMLCSS = "html/css", "Html/Css"
-    JAVA = "java", "Java"
-    CSHARP = "csharp", "Csharp"
-    JAVASCRIPT = "javascript", "Javascript"
+    PYTHON = "Python", "python"
+    DJANGO = "Django", "django"
+    REACTJS = "ReactJs", "reactjs"
+    HTMLCSS = "Html/Css", "html/css"
+    JAVA = "Java", "java"
+    CSHARP = "Csharp", "csharp"
+    JAVASCRIPT = "Javascript", "javascript"
 
 
 class Specialisation(models.Model):
@@ -40,15 +40,16 @@ class Specialisation(models.Model):
 
 
 class TopicChoices(models.TextChoices):
-    DEVOPS = "devOps", "DevOps"
-    AI = "AI", "AI"
-    FRONTEND = "frontend", "Frontend"
-    APIDESIGN = "API Design", "API design"
-    TESTING = "testing", "Testing"
-    AGILEMETHODOLOGIES = "agile methodologies", "Agile methodologies"
-    DATAVISUALISATION = "data visualisation", "Data Visualisation"
-    RESONSIVEDESIGN = "responsive design", "Responsive Design"
-    PUBLICSPEAKING = "public speaking", "Public Speaking"
+    DEVOPS = "DevOps", "devops"
+    AI = "AI", "ai"
+    FRONTEND = "Frontend", "frontend"
+    APIDESIGN = "API design", "API Design"
+    TESTING = "Testing", "testing"
+    AGILEMETHODOLOGIES = "Agile methodologies", "agile methodologies"
+    DATAVISUALISATION = "Data Visualisation", "data visualisation"
+    RESONSIVEDESIGN = "Responsive Design", "responsive design"
+    PUBLICSPEAKING = "Public Speaking", "public speaking"
+
 
 class Topic(models.Model):
     name = models.CharField(max_length=50, choices=TopicChoices.choices, unique=True)
@@ -74,7 +75,9 @@ class Portfolio(models.Model):
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     biography = models.TextField()
-    photo = models.ImageField(upload_to='portfolio/', null=True)  # Will upload to 'products' folder in S3
+    photo = models.ImageField(
+        upload_to="portfolio/", null=True
+    )  # Will upload to 'products' folder in S3
     linkedin_url = models.URLField(max_length=200, blank=True, null=True)
     email = models.EmailField(unique=True)
     created_date = models.DateTimeField(auto_now_add=True)
