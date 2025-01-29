@@ -1,11 +1,13 @@
-
 from portfolio.models import Portfolio, Specialisation
 from locations.models import Location
 from portfolio.serializers import PortfolioSerializer
 from rest_framework.exceptions import ValidationError
 from rest_framework import generics
 from rest_framework.pagination import PageNumberPagination
-from locations.models import CityChoice 
+from locations.models import CityChoice
+from django.db.models import Q
+from rest_framework.response import Response
+
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 10
@@ -17,79 +19,90 @@ class SearchView(generics.ListAPIView):
     filter_backends = []
     pagination_class = StandardResultsSetPagination
 
-    def get_queryset(self):
-        """
-        Filter results based on selected dropdown values and validate each input.
-        """
+    def get(self, request, *args, **kwargs):
         # Extract query parameters
-        location = self.request.query_params.get("location", None)
-        # topics = self.request.query_params.getlist("topic", [])  # Multi-select for topics
-        specialisations = self.request.query_params.getlist("specialisation", [])  # Multi-select for specialisations
+        location = request.query_params.get("location")
+        topics = [
+            t.lower() for t in request.query_params.get("topic", "").split(",") if t
+        ]  # Convert to lowercase
+        specialisations = [
+            s.lower()
+            for s in request.query_params.get("specialisation", "").split(",")
+            if s
+        ]  # Convert to lowercase
 
-        # Validate location against CityChoice
+        filters = Q()
+
+        # Validate location
         if location:
-            if location not in CityChoice.values:
+            if location.lower() not in map(
+                str.lower, CityChoice.values
+            ):  # Case-insensitive check
                 raise ValidationError(
                     {
                         "location": f"Woah. Where is {location}? That's not on our system, are you sure it exists?"
                     }
                 )
-
-        # Start with all Portfolios
-        queryset = Portfolio.objects.all()
-
-        # Filter by location
-        if location:
-            queryset = queryset.filter(location__city_name=location)
-            if not queryset.exists():
-                raise ValidationError(
-                    {
-                        "location": f"Oh no, Prism users haven't moved to {location} yet. Keep checking back!"
-                    }
-                )
-
-        # # Filter by topics (if implemented by someone else later)
-        # if topics:
-        #     queryset = queryset.filter(topics__name__in=topics).distinct()
-        #     if not queryset.exists():
-        #         raise ValidationError(
-        #             {
-        #                 "topics": f"Oops! We couldn't find any users specializing in the topics: {', '.join(topics)}."
-        #             }
-        #         )
+            filters &= Q(location__city_name=location)  # Case-insensitive filtering
 
         # Validate and filter by specialisations
         if specialisations:
-            valid_specialisations = Specialisation.objects.filter(
-                name__in=specialisations
-            ).values_list("name", flat=True)
-            invalid_specialisations = set(specialisations) - set(valid_specialisations)
+            valid_specialisations = set(
+                Specialisation.objects.filter(name__in=specialisations).values_list(
+                    "name", flat=True
+                )
+            )
+            invalid_specialisations = set(specialisations) - {
+                s.lower() for s in valid_specialisations
+            }
+
             if invalid_specialisations:
                 raise ValidationError(
                     {
                         "specialisations": f"Oops! This tech stack doesn't exist?: {', '.join(invalid_specialisations)}"
                     }
                 )
-            queryset = queryset.filter(
-                specialisations__name__in=specialisations
-            ).distinct()
 
-        # Final validation for empty results
+            filters &= Q(
+                specialisations__name__in=valid_specialisations
+            )  # Case-insensitive filtering
+
+        # Filter by topics if provided
+        if topics:
+            filters &= Q(topics__name__in=topics)  # Case-insensitive filtering
+
+        # Apply filters
+        queryset = Portfolio.objects.filter(filters).distinct()
+
         if not queryset.exists():
-            filters = []
-            if location:
-                filters.append(f"location '{location}'")
-            # if topics:
-            #     filters.append(f"topics {', '.join(topics)}")
-            if specialisations:
-                filters.append(f"specialisations {', '.join(specialisations)}")
+            filter_details = ", ".join(
+                [
+                    f"{key} '{value}'"
+                    for key, value in request.query_params.items()
+                    if value
+                ]
+            )
             raise ValidationError(
                 {
-                    "detail": f"Oops! We couldn't find any Prism users matching: {', '.join(filters)}."
+                    "detail": f"Oops! We couldn't find any Prism users matching: {filter_details}."
                 }
             )
 
-        return queryset
+        return Response(
+            {
+                "profiles": list(
+                    queryset.values(
+                        "id",
+                        "name",
+                        "location__city_name",
+                        "specialisations__name",
+                        "topics__name",
+                    )
+                )
+            }
+        )
+
+        # return Response(queryset.values())
 
     def get_serializer_class(self):
         """
