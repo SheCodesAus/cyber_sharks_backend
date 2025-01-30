@@ -75,9 +75,9 @@ class Portfolio(models.Model):
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     biography = models.TextField()
-    photo = models.ImageField(
-        upload_to="portfolio/", null=True
-    )  # Will upload to 'products' folder in S3
+    # Will upload to 'products' folder in S3
+    photo = models.ImageField(upload_to="portfolio/", null=True, blank=True)
+    photo_url = models.URLField(max_length=200, null=True, blank=True)
     linkedin_url = models.URLField(max_length=200, blank=True, null=True)
     email = models.EmailField(unique=True)
     created_date = models.DateTimeField(auto_now_add=True)
