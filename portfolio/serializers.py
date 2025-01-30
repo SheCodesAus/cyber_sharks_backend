@@ -13,10 +13,12 @@ class SpecialisationSerializer(serializers.ModelSerializer):
         model = Specialisation
         fields = ["id", "name"]
 
+
 class TopicSerializer(serializers.ModelSerializer):
     class Meta:
         model = Topic
         fields = ["id", "name"]
+
 
 class ContactPreferencesSerializer(serializers.ModelSerializer):
     class Meta:
@@ -64,6 +66,10 @@ class PortfolioSerializer(serializers.ModelSerializer):
             "topics",
             "contact_preferences",
             "user",
+            "occupation",
+            "company",
+            "topic_detail",
+            "specialisations_detail",
         ]
         read_only_fields = ["id", "created_date", "user"]
 
