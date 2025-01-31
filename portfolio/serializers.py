@@ -4,7 +4,8 @@ from locations.models import CityChoice
 from .models import Portfolio, Specialisation, ContactPreferences, Location, Topic
 from locations.serializers import LocationSerializer
 from users.serializers import CustomUserSerializer
-import requests from django.core.files.base import ContentFile
+import requests 
+from django.core.files.base import ContentFile
 
 
 
