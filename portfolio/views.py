@@ -1,18 +1,13 @@
-# portfolio/views.py
-
+import requests
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from django.http import Http404
 from .models import Portfolio
 from .serializers import PortfolioSerializer
 from .permissions import IsOwnerOrReadOnly
-from django.core.files.storage import default_storage
-
-
-# portfolio/views.py
-
 
 class PortfolioListCreate(APIView):
     """
@@ -31,25 +26,21 @@ class PortfolioListCreate(APIView):
             data=request.data, context={"request": request}
         )
         if serializer.is_valid():
-            # Automatically associate the portfolio with the authenticated user
-            serializer.save(
-                user=request.user
-            )  # relies on portfolio model having user FK make sure naming is correct when lucy updates users app
+            portfolio = serializer.save(user=request.user)
+            image_url = request.data.get('image_url')
+            if image_url:
+                response = requests.get(image_url)
+                if response.status_code == 200:
+                    file_name = image_url.split("/")[-1]
+                    portfolio.photo.save(file_name, ContentFile(response.content), save=False)
+                    portfolio.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
 class PortfolioDetail(APIView):
-    """
-    Retrieve, update, or delete a portfolio instance.
-    """
-
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
     def get_object(self, pk):
-        """
-        Helper method to get the object with given pk.
-        """
         try:
             portfolio = Portfolio.objects.get(pk=pk)
             self.check_object_permissions(self.request, portfolio)
@@ -59,27 +50,32 @@ class PortfolioDetail(APIView):
 
     def get(self, request, pk, format=None):
         portfolio = self.get_object(pk)
-        serializer = PortfolioSerializer(
-            portfolio, context={"request": request}
-        )  # Pass context here
+        serializer = PortfolioSerializer(portfolio, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
-
+    
     def put(self, request, pk, format=None):
         portfolio = self.get_object(pk)
-        file = request.FILES['file']
-        file_name = default_storage.save(file.name, file)
-        file_url = default_storage.url(file_name)
-        print(file_url, file_name)
+        
+        print("FILES in request:", request.FILES)  
+        print("DATA in request:", request.data)
+
+        if 'photo' in request.FILES:
+            file = request.FILES['photo']
+            file_name = default_storage.save(f"portfolio/{file.name}", file)
+            request.data['photo'] = file
+            request.data['photo_url'] = None
 
         serializer = PortfolioSerializer(
             portfolio,
             data=request.data,
             partial=True,
-            context={"request": request},  # Pass context here
+            context={"request": request},
         )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            print("Serializer errors:", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
