@@ -1,9 +1,10 @@
-# portfolio/views.py
+
+import requests
+from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from django.http import Http404
 from .models import Portfolio
 from .serializers import PortfolioSerializer
 from .permissions import IsOwnerOrReadOnly
@@ -30,7 +31,15 @@ class PortfolioListCreate(APIView):
             context={"request": request}
         )
         if serializer.is_valid():
-            serializer.save(user=request.user)
+            portfolio = serializer.save(user=request.user)
+            image_url = request.data.get('image_url')
+            if image_url:
+                response = requests.get(image_url)
+                if response.status_code == 200:
+                    file_name = image_url.split("/")[-1]
+                    portfolio.photo.save(file_name, ContentFile(response.content), save=False)
+                    portfolio.save()
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -49,17 +58,18 @@ class PortfolioDetail(APIView):
         portfolio = self.get_object(pk)
         serializer = PortfolioSerializer(portfolio, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
-
+    
     def put(self, request, pk, format=None):
         portfolio = self.get_object(pk)
         
-        # Handle file upload if present
-        if 'file' in request.FILES:
-            file = request.FILES['file']
+
+        if 'photo' in request.FILES:
+            file = request.FILES['photo']
             file_name = default_storage.save(f"portfolio/{file.name}", file)
             request.data['photo'] = file
             request.data['photo_url'] = None
-        
+
+
         serializer = PortfolioSerializer(
             portfolio,
             data=request.data,
@@ -69,6 +79,8 @@ class PortfolioDetail(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            print("Serializer errors:", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, format=None):
