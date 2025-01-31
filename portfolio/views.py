@@ -1,6 +1,6 @@
+
 import requests
 from django.core.files.base import ContentFile
-from django.core.files.storage import default_storage
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -8,12 +8,9 @@ from rest_framework import status, permissions
 from .models import Portfolio
 from .serializers import PortfolioSerializer
 from .permissions import IsOwnerOrReadOnly
+from django.core.files.storage import default_storage
 
 class PortfolioListCreate(APIView):
-    """
-    List all portfolios or create a new portfolio.
-    """
-
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get(self, request, format=None):
@@ -22,8 +19,16 @@ class PortfolioListCreate(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, format=None):
+        # Handle file upload if present
+        if 'file' in request.FILES:
+            file = request.FILES['file']
+            file_name = default_storage.save(f"portfolio/{file.name}", file)
+            request.data['photo'] = file
+            request.data['photo_url'] = None
+
         serializer = PortfolioSerializer(
-            data=request.data, context={"request": request}
+            data=request.data, 
+            context={"request": request}
         )
         if serializer.is_valid():
             portfolio = serializer.save(user=request.user)
@@ -34,6 +39,7 @@ class PortfolioListCreate(APIView):
                     file_name = image_url.split("/")[-1]
                     portfolio.photo.save(file_name, ContentFile(response.content), save=False)
                     portfolio.save()
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -56,14 +62,13 @@ class PortfolioDetail(APIView):
     def put(self, request, pk, format=None):
         portfolio = self.get_object(pk)
         
-        print("FILES in request:", request.FILES)  
-        print("DATA in request:", request.data)
 
         if 'photo' in request.FILES:
             file = request.FILES['photo']
             file_name = default_storage.save(f"portfolio/{file.name}", file)
             request.data['photo'] = file
             request.data['photo_url'] = None
+
 
         serializer = PortfolioSerializer(
             portfolio,
