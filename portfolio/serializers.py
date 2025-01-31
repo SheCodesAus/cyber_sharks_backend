@@ -93,8 +93,10 @@ class PortfolioSerializer(serializers.ModelSerializer):
             )
 
         return portfolio
-
+        
     def update(self, instance, validated_data):
+        print("Validated data received for update:", validated_data)  
+
         location_name = validated_data.pop("location", None)
         specialisations_data = validated_data.pop("specialisations", None)
         topics_data = validated_data.pop("topics", None)
@@ -128,9 +130,11 @@ class PortfolioSerializer(serializers.ModelSerializer):
                 setattr(contact_pref, attr, value)
             contact_pref.save()
 
-        # Update remaining fields
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
+        
+        for attr in ["occupation", "company", "topic_detail", "specialisations_detail"]:
+            if attr in validated_data:
+                print(f"Updating field: {attr} with value: {validated_data[attr]}")  # Debugging print
+                setattr(instance, attr, validated_data[attr])
 
         instance.save()
         return instance
