@@ -8,6 +8,7 @@ from .models import Portfolio
 from .serializers import PortfolioSerializer
 from .permissions import IsOwnerOrReadOnly
 from django.core.files.storage import default_storage
+from django.http import Http404
 
 
 class PortfolioListCreate(APIView):
