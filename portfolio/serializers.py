@@ -1,10 +1,9 @@
 from rest_framework import serializers
 from locations.models import CityChoice
 from .models import Portfolio, Specialisation, ContactPreferences, Location, Topic
-from locations.serializers import LocationSerializer
+# from locations.serializers import LocationSerializer
 from users.serializers import CustomUserSerializer
-import requests 
-from django.core.files.base import ContentFile
+# from django.core.files.base import ContentFile
 
 
 
@@ -44,7 +43,7 @@ class PortfolioSerializer(serializers.ModelSerializer):
     photo = serializers.ImageField(
         required=False, 
         allow_null=True,
-        validators=[validate_photo]
+        validators=[]
     )
     photo_url = serializers.URLField(required=False, allow_null=True)
     user = CustomUserSerializer(read_only=True)
