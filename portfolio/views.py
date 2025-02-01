@@ -23,12 +23,12 @@ class PortfolioListCreate(APIView):
         print("DATA in request:", request.data)  # Debug print
 
         # Handle file upload if present
-        if "photo" in request.FILES:
-            file = request.FILES["photo"]
-            print("Received file:", file.name)  # Debug print
-            file_name = default_storage.save(f"portfolio/{file.name}", file)
-            request.data["photo"] = file_name
-            request.data["photo_url"] = None
+        # if "photo" in request.FILES:
+        #     file = request.FILES["photo"]
+        #     print("Received file:", file.name)  # Debug print
+        #     # file_name = default_storage.save(f"portfolio/{file.name}", file)
+        #     request.data["photo"] = file
+        #     request.data["photo_url"] = None
 
         serializer = PortfolioSerializer(
             data=request.data, context={"request": request}
@@ -61,12 +61,12 @@ class PortfolioDetail(APIView):
         print("Initial request.FILES:", request.FILES)  # Debug print
         print("Initial request.data:", request.data)  # Debug print
 
-        if "photo" in request.FILES:
-            file = request.FILES["photo"]
-            print("Processing uploaded file:", file.name)  # Debug print
-            file_name = default_storage.save(f"portfolio/{file.name}", file)
-            request.data["photo"] = file_name
-            request.data["photo_url"] = None
+        # if "photo" in request.FILES:
+        #     file = request.FILES["photo"]
+        #     # print("Processing uploaded file:", file.name)  # Debug print
+        #     # file_name = default_storage.save(f"portfolio/{file.name}", file)
+        #     request.data["photo"] = file
+        #     request.data["photo_url"] = None
 
         serializer = PortfolioSerializer(
             portfolio,
