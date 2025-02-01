@@ -12,7 +12,7 @@ from django.http import Http404
 
 
 class PortfolioListCreate(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get(self, request, format=None):
         portfolios = Portfolio.objects.all()
