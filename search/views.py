@@ -93,7 +93,8 @@ class SearchView(generics.ListAPIView):
                 "profiles": list(
                     queryset.values(
                         "id",
-                        "name",
+                        "first_name",
+                        "last_name",
                         "location__city_name",
                         "specialisations__name",
                         "topics__name",
