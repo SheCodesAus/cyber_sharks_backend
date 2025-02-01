@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from locations.models import Location
+from PIL import Image
+from io import BytesIO
+from django.core.files.base import ContentFile
 
 
 EXPERIENCE_LEVEL_CHOICES = [
@@ -77,7 +80,7 @@ class Portfolio(models.Model):
     biography = models.TextField()
     # Will upload to 'products' folder in S3
     photo = models.ImageField(upload_to="portfolio/", null=True, blank=True)
-    photo_url = models.URLField(max_length=200, null=True, blank=True)
+    photo_url = models.URLField(null=True, blank=True)
     linkedin_url = models.URLField(max_length=200, blank=True, null=True)
     email = models.EmailField(unique=True)
     created_date = models.DateTimeField(auto_now_add=True)
@@ -101,3 +104,29 @@ class Portfolio(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.first_name} {self.last_name}"
+
+    def save(self, *args, **kwargs):
+        if self.photo:
+            # Open image
+            image = Image.open(self.photo)
+            
+            # Convert to JPEG
+            if image.format != 'JPEG':
+                image = image.convert('RGB')
+                
+            # Resize if too large
+            max_size = (800, 800)
+            if image.size[0] > max_size[0] or image.size[1] > max_size[1]:
+                image.thumbnail(max_size, Image.LANCZOS)
+                
+            # Save the processed image
+            buffer = BytesIO()
+            image.save(buffer, format='JPEG', quality=85)
+            file_name = self.photo.name.split('/')[-1].split('.')[0] + '.jpg'
+            self.photo.save(
+                file_name,
+                ContentFile(buffer.getvalue()),
+                save=False
+            )
+            
+        super().save(*args, **kwargs)
