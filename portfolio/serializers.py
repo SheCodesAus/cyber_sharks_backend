@@ -1,4 +1,3 @@
-
 from rest_framework import serializers
 from locations.models import CityChoice
 from .models import Portfolio, Specialisation, ContactPreferences, Location, Topic
@@ -27,9 +26,26 @@ class ContactPreferencesSerializer(serializers.ModelSerializer):
         fields = ["preferred_method", "additional_info"]
 
 
+def validate_photo(self, value):
+    if value:
+        # Check file size
+        if value.size > 5 * 1024 * 1024:  # 5MB
+            raise serializers.ValidationError("Image file too large ( > 5MB )")
+        
+        # Check file type
+        if not value.content_type.startswith('image/'):
+            raise serializers.ValidationError("File type not supported")
+            
+    return value
+
+
 class PortfolioSerializer(serializers.ModelSerializer):
     location = serializers.ChoiceField(choices=CityChoice.choices)
-    photo = serializers.ImageField(required=False, allow_null=True)
+    photo = serializers.ImageField(
+        required=False, 
+        allow_null=True,
+        validators=[validate_photo]
+    )
     photo_url = serializers.URLField(required=False, allow_null=True)
     user = CustomUserSerializer(read_only=True)
 
@@ -93,6 +109,7 @@ class PortfolioSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        print("Validated data in create:", validated_data)  # Debug print
         location_name = validated_data.pop("location")
         specialisations_data = validated_data.pop("specialisations", [])
         topics_data = validated_data.pop("topics", [])
@@ -103,6 +120,7 @@ class PortfolioSerializer(serializers.ModelSerializer):
             validated_data["photo"] = None
         elif validated_data.get("photo"):
             validated_data["photo_url"] = None
+            print("Photo being saved:", validated_data["photo"])  # Debug print
 
         # Create the location and portfolio
         location, created = Location.objects.get_or_create(city_name=location_name)
@@ -121,7 +139,7 @@ class PortfolioSerializer(serializers.ModelSerializer):
         return portfolio
 
     def update(self, instance, validated_data):
-        print("Validated data received for update:", validated_data)
+        print("Starting update with validated data:", validated_data)  # Debug print
 
         location_name = validated_data.pop("location", None)
         specialisations_data = validated_data.pop("specialisations", None)
@@ -129,12 +147,14 @@ class PortfolioSerializer(serializers.ModelSerializer):
         contact_preferences_data = validated_data.pop("contact_preferences", None)
 
         # Handle photo fields
-        if "photo_url" in validated_data:
-            instance.photo = None
-            instance.photo_url = validated_data.pop("photo_url")
-        elif "photo" in validated_data:
+        if "photo" in validated_data:
+            print("Processing photo in update:", validated_data["photo"])  # Debug print
             instance.photo_url = None
-            instance.photo = validated_data.pop("photo")
+            instance.photo = validated_data["photo"]
+        elif "photo_url" in validated_data:
+            print("Processing photo_url in update:", validated_data["photo_url"])  # Debug print
+            instance.photo = None
+            instance.photo_url = validated_data["photo_url"]
 
         # Update location if provided
         if location_name:
@@ -156,12 +176,12 @@ class PortfolioSerializer(serializers.ModelSerializer):
                 setattr(contact_pref, attr, value)
             contact_pref.save()
 
-        for attr in ["occupation", "company", "topic_detail", "specialisations_detail"]:
-            if attr in validated_data:
-                print(
-                    f"Updating field: {attr} with value: {validated_data[attr]}"
-                )  # Debugging print
-                setattr(instance, attr, validated_data[attr])
+        # Update all other fields
+        for attr, value in validated_data.items():
+            if attr not in ['photo', 'photo_url']:  # Skip photo fields as they're handled above
+                setattr(instance, attr, value)
 
+        print("About to save instance with photo:", instance.photo)  # Debug print
         instance.save()
+        print("After save, instance photo:", instance.photo)  # Debug print
         return instance
