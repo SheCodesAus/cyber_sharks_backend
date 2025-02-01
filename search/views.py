@@ -72,7 +72,7 @@ class SearchView(generics.ListAPIView):
             filters &= Q(topics__name__in=topics)  # Case-insensitive filtering
 
         # Apply filters
-        queryset = Portfolio.objects.filter(filters).distinct()
+        queryset = Portfolio.objects.filter(filters)
 
         if not queryset.exists():
             filter_details = ", ".join(
@@ -98,7 +98,7 @@ class SearchView(generics.ListAPIView):
                         "location__city_name",
                         "specialisations__name",
                         "topics__name",
-                    )
+                    ).distinct("id")
                 )
             }
         )
