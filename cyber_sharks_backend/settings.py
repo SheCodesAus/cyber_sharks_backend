@@ -122,16 +122,25 @@ WSGI_APPLICATION = "cyber_sharks_backend.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-        'OPTIONS': {
-            'timeout': 20,  # Increase timeout to 20 seconds
+# Check if running on Heroku (Heroku sets DATABASE_URL automatically)
+if "DATABASE_URL" in os.environ:
+    DATABASES = {
+        "default": dj_database_url.config(
+            conn_max_age=600,  # Keep connections open for better performance
+            ssl_require=True,  # Force SSL for Heroku PostgreSQL
+        )
+    }
+else:
+    # Use SQLite for local development
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+            "OPTIONS": {
+                "timeout": 20,  # ✅ Safe for SQLite, ignored in production
+            },
         }
     }
-}
 db_from_env = dj_database_url.config(conn_max_age=500)
 DATABASES["default"].update(db_from_env)
 
@@ -179,12 +188,12 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # AWS S3 settings
 AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
-AWS_STORAGE_BUCKET_NAME = 'shecodes-cyber-sharks'
-AWS_S3_REGION_NAME = 'us-east-1'
+AWS_STORAGE_BUCKET_NAME = "shecodes-cyber-sharks"
+AWS_S3_REGION_NAME = "us-east-1"
 AWS_DEFAULT_ACL = None  # Optional, controls default permissions for uploaded files
 
 # Use S3 for storing media files
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
 # Media URL will point to the S3 URL
-MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/'
+MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/"
